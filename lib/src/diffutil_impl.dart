@@ -45,10 +45,10 @@ class _Snake {
       required this.reverse});
 }
 
-final Comparator<_Snake> _snakeComparator = (o1, o2) {
-  final cmpX = o1.x - o2.x;
-  return cmpX == 0 ? o1.y - o2.y : cmpX;
-};
+int _snakeComparator(_Snake first, _Snake second) {
+  final compareX = first.x - second.x;
+  return compareX == 0 ? first.y - second.y : compareX;
+}
 
 class _Range {
   int? oldListStart;
@@ -79,16 +79,16 @@ class DiffResult<T> {
   ///position.
   ///
   // item stayed the same.
-  static const int FLAG_NOT_CHANGED = 1;
+  static const int flagNotChanged = 1;
 
   // item stayed in the same location but changed.
-  static const int FLAG_CHANGED = FLAG_NOT_CHANGED << 1;
+  static const int flagChanged = flagNotChanged << 1;
 
   // Item has moved and also changed.
-  static const int FLAG_MOVED_CHANGED = FLAG_CHANGED << 1;
+  static const int flagMovedChanged = flagChanged << 1;
 
   // Item has moved but did not change.
-  static const int FLAG_MOVED_NOT_CHANGED = FLAG_MOVED_CHANGED << 1;
+  static const int flagMovedNotChanged = flagMovedChanged << 1;
 
   // Ignore this update.
   // If this is an addition from the new list, it means the item is actually removed from an
@@ -97,12 +97,12 @@ class DiffResult<T> {
   // If this is a removal from the old list, it means the item is actually added back to an
   // earlier index in the new list and we'll dispatch its move when we are processing that
   // addition.
-  static const int FLAG_IGNORE = FLAG_MOVED_NOT_CHANGED << 1;
+  static const int flagIgnore = flagMovedNotChanged << 1;
 
   // since we are re-using the int arrays that were created in the Myers' step, we mask
   // change flags
-  static const int FLAG_OFFSET = 5;
-  static const int FLAG_MASK = (1 << FLAG_OFFSET) - 1;
+  static const int flagOffset = 5;
+  static const int flagMask = (1 << flagOffset) - 1;
 
   // The Myers' snakes. At this point, we only care about their diagonal sections.
   final List<_Snake> _mSnakes;
@@ -196,11 +196,11 @@ class DiffResult<T> {
         final oldItemPos = snake.x + j;
         final newItemPos = snake.y + j;
         final isSame = _mCallback.areContentsTheSame(oldItemPos, newItemPos);
-        final changeFlag = isSame ? FLAG_NOT_CHANGED : FLAG_CHANGED;
+        final changeFlag = isSame ? flagNotChanged : flagChanged;
         _mOldItemStatuses[oldItemPos] =
-            (newItemPos << FLAG_OFFSET) | changeFlag;
+            (newItemPos << flagOffset) | changeFlag;
         _mNewItemStatuses[newItemPos] =
-            (oldItemPos << FLAG_OFFSET) | changeFlag;
+            (oldItemPos << flagOffset) | changeFlag;
       }
       posOld = snake.x;
       posNew = snake.y;
@@ -258,9 +258,9 @@ class DiffResult<T> {
             // found!
             final isSame = _mCallback.areContentsTheSame(pos, myItemPos);
             final changeFlag =
-                isSame ? FLAG_MOVED_NOT_CHANGED : FLAG_MOVED_CHANGED;
-            _mNewItemStatuses[myItemPos] = (pos << FLAG_OFFSET) | FLAG_IGNORE;
-            _mOldItemStatuses[pos] = (myItemPos << FLAG_OFFSET) | changeFlag;
+                isSame ? flagMovedNotChanged : flagMovedChanged;
+            _mNewItemStatuses[myItemPos] = (pos << flagOffset) | flagIgnore;
+            _mOldItemStatuses[pos] = (myItemPos << flagOffset) | changeFlag;
             return true;
           }
         }
@@ -271,9 +271,9 @@ class DiffResult<T> {
             // found
             final isSame = _mCallback.areContentsTheSame(myItemPos, pos);
             final changeFlag =
-                isSame ? FLAG_MOVED_NOT_CHANGED : FLAG_MOVED_CHANGED;
-            _mOldItemStatuses[x - 1] = (pos << FLAG_OFFSET) | FLAG_IGNORE;
-            _mNewItemStatuses[pos] = ((x - 1) << FLAG_OFFSET) | changeFlag;
+                isSame ? flagMovedNotChanged : flagMovedChanged;
+            _mOldItemStatuses[x - 1] = (pos << flagOffset) | flagIgnore;
+            _mNewItemStatuses[pos] = ((x - 1) << flagOffset) | changeFlag;
             return true;
           }
         }
@@ -304,7 +304,7 @@ class DiffResult<T> {
             postponedUpdates, updates, endX, posNew - endY, endY);
       }
       for (var i = snakeSize - 1; i >= 0; i--) {
-        if ((_mOldItemStatuses[snake.x + i] & FLAG_MASK) == FLAG_CHANGED) {
+        if ((_mOldItemStatuses[snake.x + i] & flagMask) == flagChanged) {
           updates.add(DiffUpdate.change(
               position: snake.x + i,
               payload: _mCallback.getChangePayload(snake.x + i, snake.y + i)));
@@ -342,7 +342,7 @@ class DiffResult<T> {
             posNew - endY, endY, snake);
       }
       for (var i = snakeSize - 1; i >= 0; i--) {
-        if ((_mOldItemStatuses[snake.x + i] & FLAG_MASK) == FLAG_CHANGED) {
+        if ((_mOldItemStatuses[snake.x + i] & flagMask) == flagChanged) {
           updates.add(DataDiffUpdate.change(
               position: snake.x + i,
               oldData: delegate.getOldItemAtIndex(snake.x + i),
@@ -378,7 +378,7 @@ class DiffResult<T> {
       return;
     }
     for (var i = count - 1; i >= 0; i--) {
-      final status = _mOldItemStatuses[globalIndex + i] & FLAG_MASK;
+      final status = _mOldItemStatuses[globalIndex + i] & flagMask;
       switch (status) {
         case 0: // real removal
           updates.add(DiffUpdate.remove(position: start + i, count: 1));
@@ -386,23 +386,23 @@ class DiffResult<T> {
             update.currentPos -= 1;
           }
           break;
-        case FLAG_MOVED_CHANGED:
-        case FLAG_MOVED_NOT_CHANGED:
-          final pos = _mOldItemStatuses[globalIndex + i] >> FLAG_OFFSET;
+        case flagMovedChanged:
+        case flagMovedNotChanged:
+          final pos = _mOldItemStatuses[globalIndex + i] >> flagOffset;
           final update = _removePostponedUpdate(postponedUpdates, pos, false)!;
           // the item was moved to that position. we do -1 because this is a move not
           // add and removing current item offsets the target move by 1
           //noinspection ConstantConditions
           updates
               .add(DiffUpdate.move(from: start + i, to: update.currentPos - 1));
-          if (status == FLAG_MOVED_CHANGED) {
+          if (status == flagMovedChanged) {
             // also dispatch a change
             updates.add(DiffUpdate.change(
                 position: update.currentPos - 1,
                 payload: _mCallback.getChangePayload(globalIndex + i, pos)));
           }
           break;
-        case FLAG_IGNORE: // ignoring this
+        case flagIgnore: // ignoring this
           postponedUpdates.add(_PostponedUpdate(
               posInOwnerList: globalIndex + i,
               currentPos: start + i,
@@ -416,10 +416,10 @@ class DiffResult<T> {
     }
   }
 
-  void _dispatchRemovalsWithData<T>(
+  void _dispatchRemovalsWithData<TItem>(
       List<_PostponedUpdate> postponedUpdates,
-      List<DataDiffUpdate<T>> updates,
-      IndexableItemDiffDelegate<T> delegate,
+      List<DataDiffUpdate<TItem>> updates,
+      IndexableItemDiffDelegate<TItem> delegate,
       int start,
       int count,
       int globalIndex,
@@ -432,7 +432,7 @@ class DiffResult<T> {
       return;
     }
     for (var i = count - 1; i >= 0; i--) {
-      final status = _mOldItemStatuses[globalIndex + i] & FLAG_MASK;
+      final status = _mOldItemStatuses[globalIndex + i] & flagMask;
       final item = delegate.getOldItemAtIndex(snake.x + snake.size + i);
       switch (status) {
         case 0: // real removal
@@ -441,16 +441,16 @@ class DiffResult<T> {
             update.currentPos -= 1;
           }
           break;
-        case FLAG_MOVED_CHANGED:
-        case FLAG_MOVED_NOT_CHANGED:
-          final pos = _mOldItemStatuses[globalIndex + i] >> FLAG_OFFSET;
+        case flagMovedChanged:
+        case flagMovedNotChanged:
+          final pos = _mOldItemStatuses[globalIndex + i] >> flagOffset;
           final update = _removePostponedUpdate(postponedUpdates, pos, false)!;
           // the item was moved to that position. we do -1 because this is a move not
           // add and removing current item offsets the target move by 1
           //noinspection ConstantConditions
           updates.add(DataDiffUpdate.move(
               from: start + i, to: update.currentPos - 1, data: item));
-          if (status == FLAG_MOVED_CHANGED) {
+          if (status == flagMovedChanged) {
             // also dispatch a change
             updates.add(DataDiffUpdate.change(
                 position: update.currentPos - 1,
@@ -458,7 +458,7 @@ class DiffResult<T> {
                 newData: delegate.getNewItemAtIndex(pos)));
           }
           break;
-        case FLAG_IGNORE: // ignoring this
+        case flagIgnore: // ignoring this
           postponedUpdates.add(_PostponedUpdate(
               posInOwnerList: globalIndex + i,
               currentPos: start + i,
@@ -479,7 +479,7 @@ class DiffResult<T> {
       return;
     }
     for (var i = count - 1; i >= 0; i--) {
-      final status = _mNewItemStatuses[globalIndex + i] & FLAG_MASK;
+      final status = _mNewItemStatuses[globalIndex + i] & flagMask;
       switch (status) {
         case 0: // real addition
           updates.add(DiffUpdate.insert(position: start, count: 1));
@@ -487,20 +487,20 @@ class DiffResult<T> {
             update.currentPos += 1;
           }
           break;
-        case FLAG_MOVED_CHANGED:
-        case FLAG_MOVED_NOT_CHANGED:
-          final pos = _mNewItemStatuses[globalIndex + i] >> FLAG_OFFSET;
+        case flagMovedChanged:
+        case flagMovedNotChanged:
+          final pos = _mNewItemStatuses[globalIndex + i] >> flagOffset;
           final update = _removePostponedUpdate(postponedUpdates, pos, true)!;
           // the item was moved from that position
           updates.add(DiffUpdate.move(from: update.currentPos, to: start));
-          if (status == FLAG_MOVED_CHANGED) {
+          if (status == flagMovedChanged) {
             // also dispatch a change
             updates.add(DiffUpdate.change(
                 position: start,
                 payload: _mCallback.getChangePayload(pos, globalIndex + i)));
           }
           break;
-        case FLAG_IGNORE: // ignoring this
+        case flagIgnore: // ignoring this
           postponedUpdates.add(_PostponedUpdate(
               posInOwnerList: globalIndex + i,
               currentPos: start,
@@ -530,7 +530,7 @@ class DiffResult<T> {
       return;
     }
     for (var i = count - 1; i >= 0; i--) {
-      final status = _mNewItemStatuses[globalIndex + i] & FLAG_MASK;
+      final status = _mNewItemStatuses[globalIndex + i] & flagMask;
       final item = delegate.getNewItemAtIndex(snake.y + snake.size + i);
       switch (status) {
         case 0: // real addition
@@ -539,14 +539,14 @@ class DiffResult<T> {
             update.currentPos += 1;
           }
           break;
-        case FLAG_MOVED_CHANGED:
-        case FLAG_MOVED_NOT_CHANGED:
-          final pos = _mNewItemStatuses[globalIndex + i] >> FLAG_OFFSET;
+        case flagMovedChanged:
+        case flagMovedNotChanged:
+          final pos = _mNewItemStatuses[globalIndex + i] >> flagOffset;
           final update = _removePostponedUpdate(postponedUpdates, pos, true)!;
           // the item was moved from that position
           updates.add(DataDiffUpdate.move(
               from: update.currentPos, to: start, data: item));
-          if (status == FLAG_MOVED_CHANGED) {
+          if (status == flagMovedChanged) {
             // also dispatch a change
             updates.add(DataDiffUpdate.change(
                 position: start,
@@ -554,7 +554,7 @@ class DiffResult<T> {
                 newData: item));
           }
           break;
-        case FLAG_IGNORE: // ignoring this
+        case flagIgnore: // ignoring this
           postponedUpdates.add(_PostponedUpdate(
               posInOwnerList: globalIndex + i,
               currentPos: start,
