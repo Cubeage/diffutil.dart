@@ -111,7 +111,7 @@ void main() {
 
     test('change detection with payload', () {
       final updates = diffutil
-          .calculateDiff(DataObjectListDiffWithPayload(
+          .calculateDiff<DataObject>(DataObjectListDiffWithPayload(
               [DataObject(id: 1, payload: 0)], [DataObject(id: 1, payload: 1)]))
           .getUpdates();
 
