@@ -50,7 +50,7 @@ void main() {
   group('change detection: ', () {
     test('onChanged should be called', () {
       final updates = diffutil
-          .calculateDiff(DataObjectListDiff(
+          .calculateDiff<DataObject>(DataObjectListDiff(
               [DataObject(id: 1, payload: 0)], [DataObject(id: 1, payload: 1)]))
           .getUpdates();
 
@@ -59,7 +59,7 @@ void main() {
 
     test('onChanged should not be called if no payload changed', () {
       final updates = diffutil
-          .calculateDiff(DataObjectListDiff(
+          .calculateDiff<DataObject>(DataObjectListDiff(
               [DataObject(id: 1, payload: 1)], [DataObject(id: 1, payload: 1)]))
           .getUpdates();
 
@@ -68,7 +68,7 @@ void main() {
 
     test('onInserted works also with change detection', () {
       final updates = diffutil
-          .calculateDiff(DataObjectListDiff([
+          .calculateDiff<DataObject>(DataObjectListDiff([
             DataObject(id: 1, payload: 1),
           ], [
             DataObject(id: 1, payload: 2),
@@ -84,7 +84,7 @@ void main() {
 
     test('onRemoved works also with change detection', () {
       final updates = diffutil
-          .calculateDiff(DataObjectListDiff(
+          .calculateDiff<DataObject>(DataObjectListDiff(
               [DataObject(id: 1, payload: 1), DataObject(id: 2, payload: 2)],
               [DataObject(id: 1, payload: 2)]))
           .getUpdates();
@@ -97,7 +97,7 @@ void main() {
 
     test('onInserted and onRemoved works also with change detection', () {
       final updates = diffutil
-          .calculateDiff(DataObjectListDiff(
+          .calculateDiff<DataObject>(DataObjectListDiff(
               [DataObject(id: 1, payload: 1), DataObject(id: 2, payload: 2)],
               [DataObject(id: 1, payload: 2), DataObject(id: 3, payload: 2)]))
           .getUpdates();
@@ -197,7 +197,7 @@ void main() {
 
   test('change detection + move detection 2', () {
     final updates = diffutil
-        .calculateDiff(
+        .calculateDiff<DataObject>(
             DataObjectListDiff([
               DataObject(id: 1, payload: 1),
               DataObject(id: 2, payload: 2)
@@ -218,7 +218,7 @@ void main() {
 
   test('change detection + move detection 3', () {
     final updates = diffutil
-        .calculateDiff(
+        .calculateDiff<DataObject>(
             DataObjectListDiff([
               DataObject(id: 1, payload: 1),
               DataObject(id: 3, payload: 0),
@@ -248,7 +248,7 @@ void main() {
           isEmpty);
 
       var updates = diffutil
-          .calculateDiff(
+          .calculateDiff<DataObject>(
               DataObjectListDiff([
                 DataObject(id: 1, payload: 1),
                 DataObject(id: 2, payload: 2)
