@@ -1,5 +1,7 @@
 # diffutil.dart
 
+<p align="center"><img src="https://mark.sylphx.com/api/v1/mark/hero.svg?type=aurora&color=0:A02028,50:E03840,100:1A1A1A&text=diffutil.dart&desc=Calculate%20the%20difference%20between%20two%20lists" alt="diffutil.dart" /></p>
+
 [![Pub Package](https://img.shields.io/pub/v/diffutil_dart.svg)](https://pub.dartlang.org/packages/diffutil_dart)
 [![Build Status](https://github.com/knaeckeKami/diffutil.dart/workflows/Build/badge.svg)](https://github.com/knaeckeKami/diffutil.dart/actions)
 [![codecov](https://codecov.io/gh/knaeckeKami/diffutil.dart/branch/master/graph/badge.svg)](https://codecov.io/gh/knaeckeKami/diffutil.dart)
